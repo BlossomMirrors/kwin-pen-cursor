@@ -6,7 +6,12 @@ When you hover your pen over the tablet, this shows a custom cursor (an SVG you 
 
 It also respects app-specific cursors. If an app like Xournal++ sets its own cursor, this won't override it.
 
-## Building
+## Installing
+
+### AUR
+https://aur.archlinux.org/packages/kwin-pen-cursor
+
+### Building
 
 ```bash
 cmake -B build
