@@ -1,6 +1,8 @@
-# Build directories
+# Build & Release directories
 /build/
 /target/
+/release/
+
 
 # CMake generated files
 CMakeCache.txt
