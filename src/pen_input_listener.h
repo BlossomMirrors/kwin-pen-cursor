@@ -7,15 +7,14 @@
 #define PEN_INPUT_LISTENER_H
 
 #include <QObject>
-#include <QSocketNotifier>
 #include <QPointF>
-#include <QSize>
 
-struct libinput;
-struct libinput_event;
+class QTimer;
 
 namespace KWin
 {
+
+class TabletInputFilter;
 
 class PenInputListener : public QObject
 {
@@ -27,7 +26,10 @@ public:
 
     bool initialize();
     QPointF penPosition() const { return m_penPosition; }
-    void setScreenSize(const QSize &size) { m_screenSize = size; }
+    bool isTablet() const { return m_isTablet; }
+    bool inProximity() const { return m_inProximity; }
+    void setIsTablet(bool isTablet) { m_isTablet = isTablet; }
+    void setInProximity(bool inProx) { m_inProximity = inProx; }
 
 Q_SIGNALS:
     void penProximityIn(const QPointF &position);
@@ -36,16 +38,20 @@ Q_SIGNALS:
     void penTipDown();
     void penTipUp();
 
-private Q_SLOTS:
-    void handleEvents();
-
 private:
-    void processEvent(libinput_event *event);
+    friend class TabletInputFilter;
+    void handleProximityIn(const QPointF &position);
+    void handleProximityOut();
+    void handlePositionChanged(const QPointF &position);
+    void handleTipDown();
+    void handleTipUp();
 
-    libinput *m_libinput = nullptr;
-    QSocketNotifier *m_notifier = nullptr;
+    TabletInputFilter *m_filter = nullptr;
+    QTimer *m_proximityCheckTimer = nullptr;
     QPointF m_penPosition;
-    QSize m_screenSize;
+    QPointF m_lastCursorPos;
+    bool m_inProximity = false;
+    bool m_isTablet = false;
 };
 
 }

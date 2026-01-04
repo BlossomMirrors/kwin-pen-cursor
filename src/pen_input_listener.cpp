@@ -4,31 +4,71 @@
 */
 
 #include "pen_input_listener.h"
+#include <input.h>
+#include <input_event.h>
+#include <core/inputdevice.h>
+#include <cursor.h>
 #include <QDebug>
-#include <fcntl.h>
-#include <unistd.h>
-#include <libinput.h>
-#include <libudev.h>
+#include <QTimer>
 
 namespace KWin
 {
 
-static int open_restricted(const char *path, int flags, void *user_data)
+class TabletInputFilter : public InputEventFilter
 {
-    Q_UNUSED(user_data);
-    int fd = open(path, flags);
-    return fd < 0 ? -errno : fd;
-}
+public:
+    explicit TabletInputFilter(PenInputListener *listener)
+        : InputEventFilter(InputFilterOrder::Effects)
+        , m_listener(listener)
+    {
+    }
 
-static void close_restricted(int fd, void *user_data)
-{
-    Q_UNUSED(user_data);
-    close(fd);
-}
+    bool tabletToolAxisEvent(TabletToolAxisEvent *event) override
+    {
+        m_listener->handlePositionChanged(event->position);
+        m_listener->setIsTablet(true);
+        m_listener->setInProximity(true);
+        return false;
+    }
 
-static const struct libinput_interface libinput_interface = {
-    .open_restricted = open_restricted,
-    .close_restricted = close_restricted,
+    bool tabletToolProximityEvent(TabletToolProximityEvent *event) override
+    {
+        m_listener->setIsTablet(true);
+        if (event->type == TabletToolProximityEvent::EnterProximity) {
+            m_listener->setInProximity(true);
+            m_listener->handleProximityIn(event->position);
+        } else if (event->type == TabletToolProximityEvent::LeaveProximity) {
+            m_listener->setInProximity(false);
+            m_listener->handleProximityOut();
+        }
+        return false;
+    }
+
+    bool tabletToolTipEvent(TabletToolTipEvent *event) override
+    {
+        m_listener->setIsTablet(true);
+        if (event->type == TabletToolTipEvent::Press) {
+            m_listener->handleTipDown();
+        } else if (event->type == TabletToolTipEvent::Release) {
+            m_listener->handleTipUp();
+        }
+        return false;
+    }
+
+    bool pointerMotion(PointerMotionEvent *event) override
+    {
+        Q_UNUSED(event);
+        // Detect when switching from tablet to mouse
+        if (!m_listener->isTablet() && m_listener->inProximity()) {
+            m_listener->setInProximity(false);
+            m_listener->handleProximityOut();
+        }
+        m_listener->setIsTablet(false);
+        return false;
+    }
+
+private:
+    PenInputListener *m_listener;
 };
 
 PenInputListener::PenInputListener(QObject *parent)
@@ -38,129 +78,81 @@ PenInputListener::PenInputListener(QObject *parent)
 
 PenInputListener::~PenInputListener()
 {
-    if (m_notifier) {
-        delete m_notifier;
+    if (m_proximityCheckTimer) {
+        m_proximityCheckTimer->stop();
+        delete m_proximityCheckTimer;
     }
     
-    if (m_libinput) {
-        struct udev *udev = static_cast<struct udev *>(libinput_get_user_data(m_libinput));
-        libinput_unref(m_libinput);
-        if (udev) {
-            udev_unref(udev);
-        }
+    if (m_filter) {
+        input()->uninstallInputEventFilter(m_filter);
+        delete m_filter;
     }
 }
 
 bool PenInputListener::initialize()
 {
-    struct udev *udev = udev_new();
-    if (!udev) {
-        qWarning() << "LibinputMonitor: Failed to create udev context";
-        return false;
-    }
+    m_filter = new TabletInputFilter(this);
+    input()->installInputEventFilter(m_filter);
     
-    m_libinput = libinput_udev_create_context(&libinput_interface, nullptr, udev);
-    if (!m_libinput) {
-        qWarning() << "LibinputMonitor: Failed to create libinput context";
-        udev_unref(udev);
-        return false;
-    }
-    
-    if (libinput_udev_assign_seat(m_libinput, "seat0") != 0) {
-        qWarning() << "LibinputMonitor: Failed to assign seat";
-        libinput_unref(m_libinput);
-        m_libinput = nullptr;
-        udev_unref(udev);
-        return false;
-    }
-    
-    int fd = libinput_get_fd(m_libinput);
-    m_notifier = new QSocketNotifier(fd, QSocketNotifier::Read, this);
-    connect(m_notifier, &QSocketNotifier::activated, this, &PenInputListener::handleEvents);
+    // Continuous proximity checking for XWayland compatibility
+    // Check if tablet tool is actually being used by monitoring cursor movement patterns
+    m_proximityCheckTimer = new QTimer(this);
+    connect(m_proximityCheckTimer, &QTimer::timeout, this, [this]() {
+        QPointF currentPos = Cursors::self()->currentCursor()->pos();
+        
+        // If tablet events aren't coming through (XWayland), detect based on cursor movement
+        if (currentPos != m_lastCursorPos) {
+            m_lastCursorPos = currentPos;
+            
+            // If we think we're in proximity and position changed, emit position update
+            if (m_inProximity) {
+                Q_EMIT penPositionChanged(currentPos);
+            }
+        }
+        
+        // Auto-detect tablet proximity on XWayland by checking if tablet is enabled
+        // This is a heuristic - if cursor is moving but no mouse events, likely tablet
+        if (!m_inProximity && m_isTablet && currentPos != m_penPosition) {
+            m_inProximity = true;
+            m_penPosition = currentPos;
+            Q_EMIT penProximityIn(currentPos);
+        }
+    });
+    m_proximityCheckTimer->start(16); // ~60Hz checking
     
     return true;
 }
 
-void PenInputListener::handleEvents()
+void PenInputListener::handleProximityIn(const QPointF &position)
 {
-    if (!m_libinput) {
-        return;
-    }
-    
-    libinput_dispatch(m_libinput);
-    
-    struct libinput_event *event;
-    while ((event = libinput_get_event(m_libinput))) {
-        processEvent(event);
-        libinput_event_destroy(event);
-    }
+    m_inProximity = true;
+    m_penPosition = position;
+    m_lastCursorPos = position;
+    Q_EMIT penProximityIn(position);
 }
 
-void PenInputListener::processEvent(libinput_event *event)
+void PenInputListener::handleProximityOut()
 {
-    if (!event) {
-        return;
-    }
-    
-    libinput_event_type type = libinput_event_get_type(event);
-    
-    if (type == LIBINPUT_EVENT_DEVICE_REMOVED) {
-        struct libinput_device *device = libinput_event_get_device(event);
-        if (device && libinput_device_has_capability(device, LIBINPUT_DEVICE_CAP_TABLET_TOOL)) {
-            Q_EMIT penProximityOut();
-        }
-    }
-    else if (type == LIBINPUT_EVENT_TABLET_TOOL_PROXIMITY) {
-        struct libinput_event_tablet_tool *tablet_event = libinput_event_get_tablet_tool_event(event);
-        if (tablet_event) {
-            libinput_tablet_tool_proximity_state state = libinput_event_tablet_tool_get_proximity_state(tablet_event);
-            
-            double x = m_screenSize.width() > 0 
-                ? libinput_event_tablet_tool_get_x_transformed(tablet_event, m_screenSize.width())
-                : libinput_event_tablet_tool_get_x(tablet_event);
-            double y = m_screenSize.height() > 0 
-                ? libinput_event_tablet_tool_get_y_transformed(tablet_event, m_screenSize.height())
-                : libinput_event_tablet_tool_get_y(tablet_event);
-            m_penPosition = QPointF(x, y);
-            
-            if (state == LIBINPUT_TABLET_TOOL_PROXIMITY_STATE_IN) {
-                Q_EMIT penProximityIn(m_penPosition);
-            } else {
-                Q_EMIT penProximityOut();
-            }
-        }
-    }
-    else if (type == LIBINPUT_EVENT_TABLET_TOOL_AXIS) {
-        struct libinput_event_tablet_tool *tablet_event = libinput_event_get_tablet_tool_event(event);
-        if (tablet_event) {
-            double x = m_screenSize.width() > 0 
-                ? libinput_event_tablet_tool_get_x_transformed(tablet_event, m_screenSize.width())
-                : libinput_event_tablet_tool_get_x(tablet_event);
-            double y = m_screenSize.height() > 0 
-                ? libinput_event_tablet_tool_get_y_transformed(tablet_event, m_screenSize.height())
-                : libinput_event_tablet_tool_get_y(tablet_event);
-            m_penPosition = QPointF(x, y);
-            Q_EMIT penPositionChanged(m_penPosition);
-        }
-    }
-    else if (type == LIBINPUT_EVENT_TABLET_TOOL_TIP) {
-        struct libinput_event_tablet_tool *tablet_event = libinput_event_get_tablet_tool_event(event);
-        if (tablet_event) {
-            libinput_tablet_tool_tip_state state = libinput_event_tablet_tool_get_tip_state(tablet_event);
-            if (state == LIBINPUT_TABLET_TOOL_TIP_DOWN) {
-                Q_EMIT penTipDown();
-            } else {
-                Q_EMIT penTipUp();
-            }
-        }
-    }
-    else if (type == LIBINPUT_EVENT_POINTER_MOTION || 
-             type == LIBINPUT_EVENT_POINTER_MOTION_ABSOLUTE) {
-        struct libinput_device *device = libinput_event_get_device(event);
-        if (device && !libinput_device_has_capability(device, LIBINPUT_DEVICE_CAP_TABLET_TOOL)) {
-            Q_EMIT penProximityOut();
-        }
-    }
+    m_inProximity = false;
+    m_isTablet = false;
+    Q_EMIT penProximityOut();
+}
+
+void PenInputListener::handlePositionChanged(const QPointF &position)
+{
+    m_penPosition = position;
+    m_lastCursorPos = position;
+    Q_EMIT penPositionChanged(position);
+}
+
+void PenInputListener::handleTipDown()
+{
+    Q_EMIT penTipDown();
+}
+
+void PenInputListener::handleTipUp()
+{
+    Q_EMIT penTipUp();
 }
 
 }

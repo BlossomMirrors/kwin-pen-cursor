@@ -9,6 +9,8 @@
 #include <effect/effect.h>
 #include <memory>
 
+class QTimer;
+
 namespace KWin
 {
 
@@ -33,6 +35,7 @@ private Q_SLOTS:
     void onPenTipDown();
     void onPenTipUp();
     void onCursorShapeChanged();
+    void updateCursorPosition();
     
 private:
     bool shouldShowOverlay() const;
@@ -40,6 +43,7 @@ private:
     
     std::unique_ptr<PenInputListener> m_monitor;
     std::unique_ptr<OverlayRenderer> m_overlay;
+    QTimer *m_cursorPollTimer = nullptr;
     bool m_penInProximity = false;
     bool m_penTipDown = false;
     QString m_cursorPath;

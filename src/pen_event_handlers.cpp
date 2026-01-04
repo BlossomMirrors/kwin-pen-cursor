@@ -5,6 +5,8 @@
 
 #include "main.h"
 #include "overlay_renderer.h"
+#include <cursor.h>
+#include <QTimer>
 
 namespace KWin
 {
@@ -14,24 +16,35 @@ void PenCursorEffect::onPenProximityIn(const QPointF &position)
     m_penInProximity = true;
     m_penTipDown = false;
     updateOverlayVisibility();
-    m_overlay->setPosition(position);
+    
+    // Start polling cursor position for XWayland
+    if (m_overlay->isVisible() && m_cursorPollTimer) {
+        m_cursorPollTimer->start(8); // ~120Hz
+    }
+    
+    QPointF cursorPos = Cursors::self()->currentCursor()->pos();
+    m_overlay->setPosition(cursorPos);
 }
 
 void PenCursorEffect::onPenProximityOut()
 {
     m_penInProximity = false;
     m_penTipDown = false;
+    
+    // Stop polling
+    if (m_cursorPollTimer) {
+        m_cursorPollTimer->stop();
+    }
+    
     m_overlay->hide();
 }
 
 void PenCursorEffect::onPenPositionChanged(const QPointF &position)
 {
+    // For native Wayland apps, use the provided position
+    // For XWayland, the polling timer will handle it
     if (m_penInProximity && !m_penTipDown) {
         updateOverlayVisibility();
-    }
-    
-    if (m_overlay->isVisible()) {
-        m_overlay->setPosition(position);
     }
 }
 
@@ -54,6 +67,13 @@ void PenCursorEffect::onPenTipUp()
 void PenCursorEffect::onCursorShapeChanged()
 {
     updateOverlayVisibility();
+    
+    // Restart timer if needed
+    if (m_overlay->isVisible() && m_cursorPollTimer && !m_cursorPollTimer->isActive()) {
+        m_cursorPollTimer->start(8);
+    } else if (!m_overlay->isVisible() && m_cursorPollTimer && m_cursorPollTimer->isActive()) {
+        m_cursorPollTimer->stop();
+    }
 }
 
 }

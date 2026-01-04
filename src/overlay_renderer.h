@@ -11,6 +11,8 @@
 #include <QString>
 #include <memory>
 
+typedef struct xcb_connection_t xcb_connection_t;
+
 namespace KWin
 {
 
@@ -37,12 +39,16 @@ public:
 
 private:
     void loadCursor();
+    void hideX11Cursor();
+    void showX11Cursor();
 
     QString m_cursorPath;
     bool m_visible = false;
+    bool m_x11CursorHidden = false;
     std::unique_ptr<Item> m_container;
     std::unique_ptr<ImageItem> m_imageItem;
     std::unique_ptr<ShapeCursorSource> m_fallbackSource;
+    xcb_connection_t *m_x11Connection = nullptr;
 };
 
 }

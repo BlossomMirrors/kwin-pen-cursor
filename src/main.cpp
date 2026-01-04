@@ -10,6 +10,7 @@
 #include <KSharedConfig>
 #include <KConfigGroup>
 #include <effect/effecthandler.h>
+#include <cursor.h>
 
 namespace KWin
 {
@@ -25,7 +26,6 @@ PenCursorEffect::PenCursorEffect()
     m_cursorPath = group.readEntry("CursorPath", "/usr/share/kwin/effects/pen-point-cursor.svg");
     
     m_overlay->setCursorPath(m_cursorPath);
-    m_monitor->setScreenSize(effects->virtualScreenSize());
     
     connect(m_monitor.get(), &PenInputListener::penProximityIn, 
             this, &PenCursorEffect::onPenProximityIn);
@@ -48,6 +48,10 @@ PenCursorEffect::PenCursorEffect()
                 }
             });
     
+    // Cursor position polling timer for XWayland compatibility
+    m_cursorPollTimer = new QTimer(this);
+    connect(m_cursorPollTimer, &QTimer::timeout, this, &PenCursorEffect::updateCursorPosition);
+    
     m_monitor->initialize();
     
     QTimer::singleShot(100, this, [this]() {
@@ -59,7 +63,18 @@ PenCursorEffect::PenCursorEffect()
 
 PenCursorEffect::~PenCursorEffect()
 {
+    if (m_cursorPollTimer) {
+        m_cursorPollTimer->stop();
+    }
     m_overlay->hide();
+}
+
+void PenCursorEffect::updateCursorPosition()
+{
+    if (m_overlay->isVisible()) {
+        QPointF cursorPos = Cursors::self()->currentCursor()->pos();
+        m_overlay->setPosition(cursorPos);
+    }
 }
 
 bool PenCursorEffect::supported()

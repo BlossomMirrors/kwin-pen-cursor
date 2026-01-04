@@ -7,6 +7,8 @@
 #include "overlay_renderer.h"
 #include <cursor.h>
 #include <cursorsource.h>
+#include <effect/effecthandler.h>
+#include <effect/effectwindow.h>
 
 namespace KWin
 {
@@ -15,6 +17,25 @@ bool PenCursorEffect::shouldShowOverlay() const
 {
     if (!m_penInProximity || m_penTipDown) {
         return false;
+    }
+    
+    QPointF cursorPos = Cursors::self()->currentCursor()->pos();
+    EffectWindow *windowUnderCursor = nullptr;
+    
+    const auto windows = effects->stackingOrder();
+    for (auto it = windows.rbegin(); it != windows.rend(); ++it) {
+        EffectWindow *w = *it;
+        if (w->isDeleted() || w->isMinimized()) {
+            continue;
+        }
+        if (w->frameGeometry().contains(cursorPos)) {
+            windowUnderCursor = w;
+            break;
+        }
+    }
+    
+    if (windowUnderCursor && windowUnderCursor->isX11Client()) {
+        return true;
     }
     
     auto cursor = Cursors::self()->currentCursor();

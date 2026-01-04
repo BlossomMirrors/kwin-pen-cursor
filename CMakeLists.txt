@@ -7,7 +7,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_AUTOMOC ON)
 
 # Find Qt6
-find_package(Qt6 REQUIRED COMPONENTS Core Gui DBus Svg)
+find_package(Qt6 REQUIRED COMPONENTS Core Gui DBus Svg Widgets)
 
 # Find individual KF6 components
 find_package(KF6CoreAddons REQUIRED)
@@ -16,10 +16,8 @@ find_package(KF6ConfigWidgets REQUIRED)
 find_package(KF6KCMUtils REQUIRED)
 find_package(KF6KIO REQUIRED)
 
-# Find libinput and libudev
-find_package(PkgConfig REQUIRED)
-pkg_check_modules(LIBINPUT REQUIRED IMPORTED_TARGET libinput)
-pkg_check_modules(LIBUDEV REQUIRED IMPORTED_TARGET libudev)
+# Find XCB and XFixes for X11 cursor hiding
+find_package(XCB REQUIRED COMPONENTS XCB XFIXES)
 
 # Find KWin 6 headers
 find_path(KWIN_EFFECT_INCLUDE_DIR
@@ -67,11 +65,12 @@ target_link_libraries(kwin_pencursor
     Qt6::Core
     Qt6::Gui
     Qt6::Svg
+    Qt6::Widgets
     KF6::CoreAddons
     KF6::ConfigCore
     KF6::ConfigGui
-    PkgConfig::LIBINPUT
-    PkgConfig::LIBUDEV
+    XCB::XCB
+    XCB::XFIXES
 )
 
 # Build config module
