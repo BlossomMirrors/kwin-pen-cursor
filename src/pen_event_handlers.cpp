@@ -53,6 +53,9 @@ void PenCursorEffect::onPenTipDown()
     m_penTipDown = true;
     if (m_overlay->isVisible()) {
         m_overlay->hideOverlay();
+    } else {
+        // If overlay wasn't visible but should be, hide it anyway
+        m_overlay->hide();
     }
 }
 
@@ -66,13 +69,8 @@ void PenCursorEffect::onPenTipUp()
 
 void PenCursorEffect::onCursorShapeChanged()
 {
-    updateOverlayVisibility();
-    
-    // Restart timer if needed
-    if (m_overlay->isVisible() && m_cursorPollTimer && !m_cursorPollTimer->isActive()) {
-        m_cursorPollTimer->start(8);
-    } else if (!m_overlay->isVisible() && m_cursorPollTimer && m_cursorPollTimer->isActive()) {
-        m_cursorPollTimer->stop();
+    if (m_penInProximity && !m_penTipDown) {
+        updateOverlayVisibility();
     }
 }
 

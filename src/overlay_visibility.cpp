@@ -52,7 +52,8 @@ bool PenCursorEffect::shouldShowOverlay() const
     if (shapeSource) {
         QByteArray shapeName = shapeSource->shape();
         return shapeName == "default" || shapeName == "arrow" || 
-               shapeName == "left_ptr" || shapeName.isEmpty();
+               shapeName == "left_ptr" || shapeName == "crosshair" ||
+               shapeName == "cross" || shapeName.isEmpty();
     }
     
     return false;
@@ -60,14 +61,22 @@ bool PenCursorEffect::shouldShowOverlay() const
 
 void PenCursorEffect::updateOverlayVisibility()
 {
-    if (shouldShowOverlay()) {
-        if (!m_overlay->isVisible()) {
-            m_overlay->show();
+    bool shouldShow = shouldShowOverlay();
+    bool isCurrentlyVisible = m_overlay->isVisible();
+    
+    if (shouldShow && !isCurrentlyVisible) {
+        m_overlay->show();
+        if (m_cursorPollTimer && !m_cursorPollTimer->isActive()) {
+            m_cursorPollTimer->start(8);
         }
-    } else {
-        if (m_overlay->isVisible()) {
-            m_overlay->hide();
+    } else if (!shouldShow && isCurrentlyVisible) {
+        m_overlay->hide();
+        if (m_cursorPollTimer && m_cursorPollTimer->isActive()) {
+            m_cursorPollTimer->stop();
         }
+    } else if (shouldShow && isCurrentlyVisible) {
+        // Already visible and should stay visible - ensure it's shown
+        m_overlay->showOverlay();
     }
 }
 
