@@ -25,8 +25,8 @@ Then log out and back in or reload the plasma shell.
 
 ## Settings
 
-Its Settings are in → Workspace Behavior → Desktop Effects.
-Currently supportiung changing the custom cursor.
+Its Settings are in → Workspace Behavior → Desktop Effects.<br>
+Currently supportiung changing the custom cursor.<br>
 You may need to log out and back in for or reload the plasma shell to see applied changes.
 
 ## License
