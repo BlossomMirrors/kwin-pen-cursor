@@ -23,11 +23,11 @@ or just
 
 Then log out and back in or reload the plasma shell.
 
+## Settings
+
 Its Settings are in → Workspace Behavior → Desktop Effects.
-
-## Custom Cursor
-
-Replace `/usr/share/kwin/effects/pen-point-cursor.svg` with your own SVG.
+Currently supportiung changing the custom cursor.
+You may need to log out and back in for or reload the plasma shell to see applied changes.
 
 ## License
 
