@@ -1,0 +1,20 @@
+{
+  "KPlugin": {
+    "Authors": [
+      {
+        "Name": "Blossom"
+      },
+      {
+        "Name": "Yannik Ain"
+      }
+    ],
+    "Category": "Accessibility",
+    "Description": "Shows a custom cursor when pen is in proximity and hides it when pen touches the screen",
+    "EnabledByDefault": true,
+    "Id": "pencursor",
+    "License": "MIT",
+    "Name": "Pen Cursor",
+    "Version": "1.0"
+  },
+  "X-KDE-ConfigModule": "kwin_pencursor_config"
+}

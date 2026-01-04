@@ -1,0 +1,33 @@
+# Build directories
+/build/
+/target/
+
+# CMake generated files
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+install_manifest.txt
+compile_commands.json
+Makefile
+
+# Autogen files
+*_autogen/
+moc_*.cpp
+moc_*.h
+*.moc
+mocs_compilation.cpp
+
+# Compiled object files
+*.o
+*.so
+*.a
+*.lo
+
+# Qt/KDE specific
+*.qmlc
+*.jsc
+.qmake.stash
+
+# OS generated files
+.DS_Store
+Thumbs.db
