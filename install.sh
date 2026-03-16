@@ -3,7 +3,11 @@ set -e
 
 echo "Building Pen Cursor effect..."
 
-if ! command -v cmake &> /dev/null; then
+if command -v dnf &> /dev/null; then
+    sudo dnf install -y cmake gcc-c++ qt6-qtbase-devel qt6-qtsvg-devel \
+        kf6-kcoreaddons-devel kf6-kconfig-devel kf6-kconfigwidgets-devel \
+        kf6-kcmutils-devel kf6-kio-devel kwin-devel libxcb-devel
+elif ! command -v cmake &> /dev/null; then
     echo "Error: cmake not found. Install it first."
     exit 1
 fi

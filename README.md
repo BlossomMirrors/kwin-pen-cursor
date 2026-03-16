@@ -25,6 +25,14 @@ or just
 ./install.sh
 ```
 
+### Fedora RPM
+
+```bash
+./release.sh
+```
+
+Installs all build deps automatically, outputs the `.rpm` to `release/`.
+
 
 Then log out and back in or reload the Plasma shell.
 
