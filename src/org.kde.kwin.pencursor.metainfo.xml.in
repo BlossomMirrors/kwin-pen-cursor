@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="generic">
+  <id>org.kde.kwin.pencursor</id>
+  <name>Pen Cursor</name>
+  <summary>Shows a custom cursor when a pen tablet is in proximity</summary>
+  <description>
+    <p>
+      A KWin desktop effect that displays a custom SVG cursor overlay when a
+      pen tablet stylus is in proximity, and hides it when the pen touches the
+      screen.
+    </p>
+  </description>
+  <url type="homepage">https://blossomos.org</url>
+  <url type="bugtracker">https://codeberg.org/BlossomOS/kwin-pen-cursor/issues</url>
+  <url type="vcs-browser">https://codeberg.org/BlossomOS/kwin-pen-cursor</url>
+  <metadata_license>MIT</metadata_license>
+  <project_license>MIT</project_license>
+  <developer id="org.blossomos">
+    <name>BlossomOS</name>
+  </developer>
+  <releases>
+    <release version="@PLUGIN_VERSION@" type="stable" date="@PLUGIN_RELEASE_DATE@"/>
+  </releases>
+</component>

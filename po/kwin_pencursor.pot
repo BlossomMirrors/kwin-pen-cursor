@@ -1,0 +1,43 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2025 Blossom
+# This file is distributed under the same license as the kwin-pen-cursor package.
+# BlossomOS <info@blossomos.org>, 2025.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: kwin-pen-cursor\n"
+"Report-Msgid-Bugs-To: https://codeberg.org/BlossomOS/kwin-pen-cursor/issues\n"
+"POT-Creation-Date: 2025-01-01 00:00+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#. Plugin name — used in KDE System Settings and Discover
+#: src/pencursor.json src/org.kde.kwin.pencursor.metainfo.xml.in
+msgid "Pen Cursor"
+msgstr ""
+
+#. Plugin description shown in KDE System Settings > Desktop Effects
+#: src/pencursor.json
+msgid "Shows a custom cursor when pen is in proximity and hides it when pen touches the screen"
+msgstr ""
+
+#. Short summary shown in Discover
+#: src/org.kde.kwin.pencursor.metainfo.xml.in
+msgid "Shows a custom cursor when a pen tablet is in proximity"
+msgstr ""
+
+#. Long description shown in Discover
+#: src/org.kde.kwin.pencursor.metainfo.xml.in
+msgid "A KWin desktop effect that displays a custom SVG cursor overlay when a pen tablet stylus is in proximity, and hides it when the pen touches the screen."
+msgstr ""
+
+#. Label for the cursor SVG file picker in the effect settings
+#: src/pencursor_kcm.cpp
+msgid "Cursor SVG:"
+msgstr ""

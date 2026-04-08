@@ -22,7 +22,7 @@ sudo cmake --install build
 or just
 
 ```bash
-./install.sh
+./build.sh
 ```
 
 ### Fedora RPM

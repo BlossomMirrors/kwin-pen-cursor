@@ -1,0 +1,41 @@
+# German translation of kwin-pen-cursor.
+# Copyright (C) 2025 Blossom
+# Yannik Ain <yannik@blossomos.org>, 2025.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: kwin-pen-cursor\n"
+"Report-Msgid-Bugs-To: https://codeberg.org/BlossomOS/kwin-pen-cursor/issues\n"
+"POT-Creation-Date: 2025-01-01 00:00+0000\n"
+"PO-Revision-Date: 2025-01-01 00:00+0000\n"
+"Last-Translator: Yannik Ain <yannik@blossomos.org>\n"
+"Language-Team: German\n"
+"Language: de\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#. Plugin name — used in KDE System Settings and Discover
+#: src/pencursor.json src/org.kde.kwin.pencursor.metainfo.xml.in
+msgid "Pen Cursor"
+msgstr "Stift-Cursor"
+
+#. Plugin description shown in KDE System Settings > Desktop Effects
+#: src/pencursor.json
+msgid "Shows a custom cursor when pen is in proximity and hides it when pen touches the screen"
+msgstr "Zeigt einen eigenen Cursor an, wenn der Stift in der Nähe ist, und blendet ihn aus, wenn der Stift den Bildschirm berührt"
+
+#. Short summary shown in Discover
+#: src/org.kde.kwin.pencursor.metainfo.xml.in
+msgid "Shows a custom cursor when a pen tablet is in proximity"
+msgstr "Zeigt einen eigenen Cursor an, wenn ein Stifttablett in der Nähe ist"
+
+#. Long description shown in Discover
+#: src/org.kde.kwin.pencursor.metainfo.xml.in
+msgid "A KWin desktop effect that displays a custom SVG cursor overlay when a pen tablet stylus is in proximity, and hides it when the pen touches the screen."
+msgstr "Ein KWin-Desktopeffekt, der einen eigenen SVG-Cursor anzeigt, wenn der Stift eines Stifttabletts in der Nähe ist, und ihn ausblendet, wenn der Stift den Bildschirm berührt."
+
+#. Label for the cursor SVG file picker in the effect settings
+#: src/pencursor_kcm.cpp
+msgid "Cursor SVG:"
+msgstr "Cursor-SVG:"

@@ -9,6 +9,7 @@
 #include <KConfigGroup>
 #include <KSharedConfig>
 #include <KFile>
+#include <KLocalizedString>
 #include <KUrlRequester>
 #include <QFormLayout>
 #include <QUrl>
@@ -24,7 +25,7 @@ PenCursorEffectConfig::PenCursorEffectConfig(QObject *parent, const KPluginMetaD
     m_urlRequester->setNameFilters({QStringLiteral("*.svg")});
     m_urlRequester->setMode(KFile::File | KFile::ExistingOnly);
     
-    layout->addRow(QStringLiteral("Cursor SVG:"), m_urlRequester);
+    layout->addRow(i18nd("kwin_pencursor", "Cursor SVG:"), m_urlRequester);
     
     auto config = KSharedConfig::openConfig(QStringLiteral("pencursorrc"));
     auto group = config->group(QStringLiteral("General"));

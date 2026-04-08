@@ -2,7 +2,7 @@
   "KPlugin": {
     "Authors": [
       {
-        "Name": "Blossom"
+        "Name": "BlossomOS"
       },
       {
         "Name": "Yannik Ain"
@@ -14,7 +14,8 @@
     "Id": "pencursor",
     "License": "MIT",
     "Name": "Pen Cursor",
-    "Version": "1.0"
+    "TranslationDomain": "kwin_pencursor",
+    "Version": "1.0.2"
   },
   "X-KDE-ConfigModule": "kwin_pencursor_config"
 }

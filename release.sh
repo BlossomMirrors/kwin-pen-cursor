@@ -2,6 +2,12 @@
 set -e
 
 NAME=kwin-pen-cursor
+
+sudo dnf install -y cmake gcc-c++ qt6-qtbase-devel qt6-qtsvg-devel \
+    kf6-kcoreaddons-devel kf6-kconfig-devel kf6-kconfigwidgets-devel \
+    kf6-kcmutils-devel kf6-kio-devel kf6-ki18n-devel gettext itstool \
+    kwin-devel libxcb-devel rpm-build
+
 CURRENT_VERSION=$(grep -o '"Version": "[^"]*' src/pencursor.json | cut -d'"' -f4)
 
 read -rp "Version [$CURRENT_VERSION]: " VERSION
@@ -13,10 +19,17 @@ RELEASE=${RELEASE:-1}
 read -rp "Changelog entry [packaged $NAME $VERSION]: " CHANGELOG
 CHANGELOG=${CHANGELOG:-"packaged $NAME $VERSION"}
 
+GIT_PACKAGER="$(git config user.name) <$(git config user.email)>"
+read -rp "Packager [$GIT_PACKAGER]: " PACKAGER
+PACKAGER=${PACKAGER:-$GIT_PACKAGER}
+
+RELEASE_DATE=$(date +%Y-%m-%d)
+
 if [ "$VERSION" != "$CURRENT_VERSION" ]; then
     sed -i "s/\"Version\": \"$CURRENT_VERSION\"/\"Version\": \"$VERSION\"/" src/pencursor.json
     echo "Updated version in pencursor.json to $VERSION"
 fi
+
 
 RPMBUILD=~/rpmbuild
 mkdir -p "$RPMBUILD"/{SPECS,SOURCES,BUILD,RPMS,SRPMS} release
@@ -32,7 +45,9 @@ Version:        $VERSION
 Release:        $RELEASE%{?dist}
 Summary:        KWin effect that shows a cursor overlay when using a pen tablet
 License:        MIT
-URL:            https://github.com/vaporvee/kwin-pen-cursor
+URL:            https://codeberg.org/BlossomOS/kwin-pen-cursor
+Vendor:         BlossomOS <info@blossomos.org>
+Packager:       $PACKAGER
 Source0:        %{name}-%{version}.tar.gz
 
 BuildRequires:  cmake
@@ -44,6 +59,9 @@ BuildRequires:  kf6-kconfig-devel
 BuildRequires:  kf6-kconfigwidgets-devel
 BuildRequires:  kf6-kcmutils-devel
 BuildRequires:  kf6-kio-devel
+BuildRequires:  kf6-ki18n-devel
+BuildRequires:  gettext
+BuildRequires:  itstool
 BuildRequires:  kwin-devel
 BuildRequires:  libxcb-devel
 
@@ -68,6 +86,8 @@ in proximity, hiding the system cursor in the process.
 %{_libdir}/qt6/plugins/kwin/effects/configs/kwin_pencursor_config.so
 %{_datadir}/kwin/effects/pencursor.json
 %{_datadir}/kwin/effects/pen-point-cursor.svg
+%{_datadir}/metainfo/org.kde.kwin.pencursor.metainfo.xml
+%{_datadir}/locale/*/LC_MESSAGES/kwin_pencursor.mo
 
 %changelog
 * $(LC_TIME=C date "+%a %b %d %Y") packager - $VERSION-$RELEASE

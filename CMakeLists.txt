@@ -2,6 +2,13 @@ cmake_minimum_required(VERSION 3.16)
 
 project(kwin-pencursor-effect)
 
+# Read version from plugin metadata
+file(READ "${CMAKE_SOURCE_DIR}/src/pencursor.json" PENCURSOR_JSON)
+string(REGEX MATCH "\"Version\": \"([^\"]+)\"" _ "${PENCURSOR_JSON}")
+set(PLUGIN_VERSION "${CMAKE_MATCH_1}")
+
+string(TIMESTAMP PLUGIN_RELEASE_DATE "%Y-%m-%d")
+
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_AUTOMOC ON)
@@ -15,6 +22,7 @@ find_package(KF6Config REQUIRED)
 find_package(KF6ConfigWidgets REQUIRED)
 find_package(KF6KCMUtils REQUIRED)
 find_package(KF6KIO REQUIRED)
+find_package(KF6I18n REQUIRED)
 
 # Find XCB and XFixes for X11 cursor hiding
 find_package(XCB REQUIRED COMPONENTS XCB XFIXES)
@@ -95,6 +103,7 @@ target_link_libraries(kwin_pencursor_config
     KF6::ConfigWidgets
     KF6::KCMUtils
     KF6::KIOWidgets
+    KF6::I18n
 )
 
 # Install paths
@@ -124,6 +133,51 @@ install(FILES src/pencursor.json
 install(FILES pen-point-cursor.svg
     DESTINATION ${DATA_INSTALL_DIR}/kwin/effects
 )
+
+# Configure and install AppStream metadata
+configure_file(src/org.kde.kwin.pencursor.metainfo.xml.in
+    org.kde.kwin.pencursor.metainfo.xml.configured
+    @ONLY
+)
+
+find_program(ITSTOOL itstool REQUIRED)
+find_program(MSGFMT msgfmt REQUIRED)
+file(GLOB METAINFO_PO_FILES "${CMAKE_SOURCE_DIR}/po/*/kwin_pencursor.po")
+
+set(METAINFO_MO_FILES)
+foreach(PO_FILE ${METAINFO_PO_FILES})
+    get_filename_component(LANG_DIR ${PO_FILE} DIRECTORY)
+    get_filename_component(LANG ${LANG_DIR} NAME)
+    set(MO_FILE ${CMAKE_CURRENT_BINARY_DIR}/metainfo_mo/${LANG}.mo)
+    add_custom_command(
+        OUTPUT ${MO_FILE}
+        COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_CURRENT_BINARY_DIR}/metainfo_mo
+        COMMAND ${MSGFMT} -o ${MO_FILE} ${PO_FILE}
+        DEPENDS ${PO_FILE}
+    )
+    list(APPEND METAINFO_MO_FILES ${MO_FILE})
+endforeach()
+
+add_custom_command(
+    OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/org.kde.kwin.pencursor.metainfo.xml
+    COMMAND ${ITSTOOL}
+            -j ${CMAKE_CURRENT_BINARY_DIR}/org.kde.kwin.pencursor.metainfo.xml.configured
+            -o ${CMAKE_CURRENT_BINARY_DIR}/org.kde.kwin.pencursor.metainfo.xml
+            ${METAINFO_MO_FILES}
+    DEPENDS
+            ${CMAKE_CURRENT_BINARY_DIR}/org.kde.kwin.pencursor.metainfo.xml.configured
+            ${METAINFO_MO_FILES}
+    COMMENT "Merging translations into metainfo"
+)
+add_custom_target(metainfo ALL DEPENDS
+    ${CMAKE_CURRENT_BINARY_DIR}/org.kde.kwin.pencursor.metainfo.xml
+)
+
+install(FILES ${CMAKE_CURRENT_BINARY_DIR}/org.kde.kwin.pencursor.metainfo.xml
+    DESTINATION ${DATA_INSTALL_DIR}/metainfo
+)
+
+ki18n_install(po)
 
 message(STATUS "Building Pen Cursor Effect for KWin 6")
 message(STATUS "  Plugin install dir: ${PLUGIN_INSTALL_DIR}/kwin/effects/plugins")
