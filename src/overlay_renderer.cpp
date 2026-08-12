@@ -81,7 +81,7 @@ void OverlayRenderer::show()
     hideX11Cursor();        // Hide X11/XWayland cursor
     
     m_container = std::make_unique<Item>(effects->scene()->overlayItem());
-    m_imageItem = effects->scene()->renderer()->createImageItem(m_container.get());
+    m_imageItem = std::make_unique<ImageItem>(m_container.get());
     
     loadCursor();
 }
